@@ -1,0 +1,5 @@
+MarkupSafe==1.1.1
+flask==1.1.4
+xmind2zantao>=1.0.0
+arrow==0.17.0
+gunicorn==19.10.0

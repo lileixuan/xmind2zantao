@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} | Xmind2Zandao Preview</title>
+    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
+    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
+    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/v2.css') }}">
+</head>
+<body style="background: #fff; padding: 50px">
+<div class="header">
+    <h1>{{ name }} - Preview</h1>
+    <h2> 用例: {{ suite | length }}
+        {% if zantao_api %}  /
+        <a href="{{ url_for('preview_tree_file',filename=name) }}" target="_blank">模块缺失:
+        <span {% if catagory_nomatch %} style="color:red;" {% endif %}>{{ catagory_nomatch }}</span>
+        </a>
+        {% endif %}
+        / <a href="{{ url_for("download_file",filename= name) }}">下载 CSV</a>
+        / <a href="{{ url_for("index") }}">返回</a></h2>
+</div>
+<table class="pure-table tests-table">
+    <thead>
+    <tr>
+        <th width="5%">#</th>
+        <th width="10%">模块</th>
+        <th>用例标题</th>
+        <th width="60px">优先级</th>
+        <th width="200px">前置条件</th>
+        <th width="45%">用例步骤</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    {% for test in suite %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+                <div {% if not test.category_match and zantao_api%} style="color:red;" {% endif %}>{{ test.category }}</div>
+            </td>
+            <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }}
+                {% if test.name|length>100 %}
+                    <span class="long-name-info">Warn: test name might be too long: {{ test.name|length }}!</span>
+                {% endif %}
+            </td>
+            <td>
+                <div class=" {% if test.importance==1 %} tag-error {% endif %} {% if test.importance==2 %} tag-warn {% endif %} {% if test.importance==3 %} tag-info {% endif %} {% if test.importance==4 %} tag-success {% endif %} tooltip">
+                    优先级 {{ test.importance }}
+                    <span class="tooltiptext">优先级 {{ test.importance }} </span>
+                </div>
+            </td>
+            <td>
+                {% if test.preconditions %}
+                    <div class="tooltip">{{ test.preconditions | replace('\n','<br>') |safe }}
+                        <p class="tooltiptext">
+                            <b>前置条件:</b> <br>
+                            {{ test.preconditions | replace('\n','<br>') |safe }}
+                        </p></div>
+                {% endif %}
+            <td>
+                {% if test.steps %}
+                    <ol>
+                        {% for step in test.steps %}
+                            <li>{{ step.action | replace('\n','<br>') |safe }}
+                                {% if step.expected %}
+                                    <ul>
+                                        <li>{{ step.expected | replace('\n','<br>') |safe }}</li>
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="footer">
+    <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a>
+</div>
+</body>
+</html>
