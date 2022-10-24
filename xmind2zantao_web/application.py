@@ -16,21 +16,25 @@ from xmind2zantao.xmind_parser import xmind_to_suite
 from xmind2zantao.zandao_helper import ZantaoHelper, build_catalog_tree
 from xmind2zantao.zentao import xmind_to_zentao_csv_file
 
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+
 UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = ['xmind']
 DEBUG = True
 DATABASE = './data.db3'
 HOST = '0.0.0.0'
 
-# 是否启用禅道附加功能，目前主要是对模块的检查
-ENABLE_ZANTAO_API = False
-# 禅道地址
-ZANTAO_BASE_URL = 'http://192.168.103.38/zentao'
+# 禅道地址 http://192.168.103.38/zentao
+ZANTAO_BASE_URL = os.getenv('ZANTAO_BASE_URL')
 # 登录信息
-ZANTAO_USERNAME = 'xxx'
-ZANTAO_PASSWD = 'xxx'
-# 产品ID。多云管理：3，私有云：1
-ZANTAO_PRODUCT_ID = 3
+ZANTAO_USERNAME = os.getenv('ZANTAO_USERNAME')
+ZANTAO_PASSWD = os.getenv('ZANTAO_PASSWD')
+# 产品ID。
+ZANTAO_PRODUCT_ID = os.getenv('ZANTAO_PRODUCT_ID')
+
+# 是否启用禅道附加功能，目前主要是对模块的检查
+ENABLE_ZANTAO_API = ZANTAO_BASE_URL and ZANTAO_USERNAME and ZANTAO_PASSWD and ZANTAO_PRODUCT_ID
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -43,7 +47,7 @@ def connect_db():
 
 def init_db():
     with closing(connect_db()) as db:
-        with app.open_resource('schema.sql', mode='r') as f:
+        with app.open_resource(join(BASE_PATH, 'schema.sql'), mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
 

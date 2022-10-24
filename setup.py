@@ -14,13 +14,16 @@ long_description = __doc__
 classifiers = ["License :: OSI Approved :: MIT License",
                "Topic :: Software Development",
                "Topic :: Utilities",
-               "Operating System :: Microsoft :: Windows",
-               "Operating System :: MacOS :: MacOS X"] + [
+               "Operating System :: OS Independent"] + [
                   ("Programming Language :: Python :: %s" % x) for x in "2.7".split()]
 
 requires = [
     'xmindparser',
-    'requests<2.28'
+    'requests<2.28',
+    'MarkupSafe==1.1.1',
+    'flask==1.1.4',
+    'arrow==0.17.0',
+    'gunicorn==19.10.0',
 ]
 
 
@@ -28,14 +31,21 @@ def main():
     setup(
         name="xmind2zantao",
         description="Convert xmind to zantao csv",
+        url='https://github.com/lileixuan/xmind2zantao',
         keywords="xmind zantao import converter testing testcase",
         classifiers=classifiers,
-        version="1.0.0",
+        version="1.0.2",
         author="LileiXuan",
         author_email="lileixuan@gmail.com",
         packages=find_packages(exclude=['tests', 'tests.*']),
-        package_data={},
+        package_data={  # custom
+            '': ['README.md'],
+            'xmind2zantao_web': ['static/*', 'static/css/*', 'static/guide/*', 'templates/*', 'schema.sql',
+                                 'deploy.sh'],
+        },
         install_requires=requires,
+        long_description=open('README.md').read(),
+        long_description_content_type='text/markdown',
         zip_safe=False
     )
 

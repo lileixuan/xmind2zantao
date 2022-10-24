@@ -1,17 +1,19 @@
-## Xmind2Zantao Guide
+## Xmind2Zantao
+
+[![PyPI](https://img.shields.io/pypi/v/xmind2zantao.svg)](https://pypi.org/project/xmind2zantao/)
 
 ### 规则
 **测试用例定义:**
 
-![测试用例标记](web/static/guide/测试用例标记.png)
+![测试用例标记](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/测试用例标记.png)
 
 **前置条件:**
 
-![前置条件](web/static/guide/前置条件.png)
+![前置条件](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/前置条件.png)
 
 **输出概览:**
 
-![输出预览](web/static/guide/输出预览.png)
+![输出预览](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/输出预览.png)
 
 ### 详细说明
 
@@ -27,61 +29,61 @@
 
 **下载示例Xmind文件:**
 
-- [xmind2zantao.xmind](web/static/guide/xmind2zantao.xmind)
+- [xmind2zantao.xmind](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/xmind2zantao.xmind)
 
 ### 附加功能（需要后台启用相关配置）
 
 预览中查看每个用例的模块在禅道是否存在。
 
-![禅道模块提示](web/static/guide/禅道模块提示.png)
+![禅道模块提示](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/禅道模块提示.png)
 
 点击进入模块的树状展示页面，不存在的模块标红展示。
 
-![禅道模块树展示](web/static/guide/禅道模块树展示.png)
+![禅道模块树展示](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/禅道模块树展示.png)
 
 
 ### 部署
 
+安装软件包：
+```shell
+pip install xmind2zantao
+```
+
 1. 快速启动web服务
 
 ```shell
-# clone this git repo ahead
-[root@xmind2zantao web]# cd /path/to/xmind2zantao/web
-[root@xmind2zantao web]# pip install -r requirements.txt
-[root@xmind2zantao web]# sh deploy.sh
-start deploy...
-finish deploy...
-* Running on http://0.0.0.0:8000/
-[root@xmind2zantao web]# 
+gunicorn xmind2zantao_web.application:app -p application.pid -b 0.0.0.0:8000 -w 4 -D
 ```
 打开浏览器 输入正确的IP地址和端口来使用。
 
-![首页](web/static/guide/首页.png)
+![首页](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/首页.png)
 
 
 2. 启用禅道模块检查功能
 
-目前只支持对一个产品的目录进行检查，如果有多个产品都是用，可以部署多个web服务来暂时解决。
-
-* 获取产品ID
-
-![产品ID](web/static/guide/产品ID.png)
-
-* 修改appliction.py文件中的配置，配置正确的禅道地址、认证信息以及上面获取到的产品ID
+启动服务时指定相应的环境变量即可
 
 ```python
-# 是否启用禅道附加功能，目前主要是对模块的检查
-ENABLE_ZANTAO_API = False
-# 禅道地址
-ZANTAO_BASE_URL = 'http://192.168.103.38/zentao'
-# 登录信息
-ZANTAO_USERNAME = 'xxx'
-ZANTAO_PASSWD = 'xxx'
-# 产品ID。多云管理：3，私有云：1
-ZANTAO_PRODUCT_ID = 3
+gunicorn xmind2zantao_web.application:app -e ZANTAO_BASE_URL='http://127.0.0.1/zentao' -e ZANTAO_USERNAME=testuser -e ZANTAO_PASSWD='123456' -e ZANTAO_PRODUCT_ID=3 -p application.pid -b 0.0.0.0:8000 -w 4 -D
 ```
 
-* 重启web服务
+需要的环境变量如下：
+```python
+# 禅道地址
+ZANTAO_BASE_URL='http://127.0.0.1/zentao'
+# 登录用户名
+ZANTAO_USERNAME='xxx'
+# 登录密码
+ZANTAO_PASSWD='xxx'
+# 产品ID
+ZANTAO_PRODUCT_ID=3
+```
+
+获取产品ID：
+
+![产品ID](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/产品ID.png)
+
+**注意:** 目前只支持对一个产品的目录进行检查，如果有多个产品都是用，可以部署多个web服务来暂时解决。
 
 ### 感谢
 
