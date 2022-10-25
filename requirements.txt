@@ -1,2 +1,0 @@
-xmindparser
-requests<2.28

@@ -9,7 +9,6 @@ import re
 from xmindparser import xmind_to_dict, config
 
 from .datatype import TestCase, TestStep, cache
-from .datatype import TestSuite
 
 config['hideEmptyValue'] = False
 _config = {
@@ -49,19 +48,6 @@ def get_default_sheet(sheets):
 def get_logger():
     from xmindparser import logger
     return logger
-
-
-def flat_suite(suite):
-    """Convert a suite object into flat testcase list."""
-    tests = []
-
-    for suite in suite.sub_suites:
-        for test in suite.testcase_list:
-            d = test.to_dict()
-            d['suite'] = suite.name
-            tests.append(d)
-
-    return tests
 
 
 def get_priority(d):
@@ -172,12 +158,7 @@ def parse_testcase(testcase_dict, parent=None):
         pass
 
 
-def xmind_to_flat_dict(xmind_file):
-    s = xmind_to_suite(xmind_file)
-    return flat_suite(s)
-
-
-def xmind_to_suite(xmind_file):
+def xmind_to_testcase(xmind_file):
     """Auto detect and parser xmind to test suite object."""
     cache.clear()
     open_and_cache_xmind(xmind_file)
@@ -199,25 +180,13 @@ def xmind_to_suite(xmind_file):
 
             parent.pop()
 
-    def parse_suite(suite_dict):
-        suite = TestSuite()
-        suite.name = suite_dict['title']
-        suite.details = suite_dict['note']
-        suite.testcase_list = []
-        testcase_topics = suite_dict.get('topics', [])
-
-        for node in testcase_topics:
-            for t in parse_testcase_list(node, [suite_dict]):
-                suite.testcase_list.append(t)
-
-        return suite
-
     open_and_cache_xmind(xmind_file)
-    root = cache['root']
+    xmind_root = cache['root']
+    testcase_list = []
+    testcase_topics = xmind_root.get('topics', [])
 
-    suite = TestSuite()
-    suite.sub_suites = []
+    for node in testcase_topics:
+        for t in parse_testcase_list(node, [xmind_root]):
+            testcase_list.append(t)
 
-    suite.sub_suites.append(parse_suite(root))
-
-    return suite
+    return testcase_list

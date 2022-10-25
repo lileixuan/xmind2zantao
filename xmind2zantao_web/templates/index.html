@@ -51,11 +51,14 @@
                 </table>
             {% else %}
                 <p>Welcome! Xmind2Zantao is a tool to help you convert xmind file to zantao csv file, and then you
-                    will be able to import the csv into Zantao. Are you ready? Upload your xmind file now.</p>
+                    will be able to import the csv into Zantao. </p>
+                <p>Are you ready? Upload your xmind file now.</p>
             {% endif %}
         </div>
         <div class="footer-home">
-            <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> 
+            <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |
+            <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |
+            Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a>
         </div>
     </div>
 
@@ -67,6 +70,7 @@
             document.getElementById("file-label").innerHTML = this.value.split("\\").pop();
         }
     });
+
 
 </script>
 

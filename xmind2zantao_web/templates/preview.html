@@ -10,11 +10,11 @@
 <body style="background: #fff; padding: 50px">
 <div class="header">
     <h1>{{ name }} - Preview</h1>
-    <h2> 用例: {{ suite | length }}
+    <h2> 用例: {{ testcases | length }}
         {% if zantao_api %}  /
-        <a href="{{ url_for('preview_tree_file',filename=name) }}" target="_blank">模块缺失:
-        <span {% if catagory_nomatch %} style="color:red;" {% endif %}>{{ catagory_nomatch }}</span>
-        </a>
+            <a href="{{ url_for('preview_tree_file',filename=name) }}" target="_blank">模块缺失:
+                <span {% if catagory_nomatch %} style="color:red;" {% endif %}>{{ catagory_nomatch }}</span>
+            </a>
         {% endif %}
         / <a href="{{ url_for("download_file",filename= name) }}">下载 CSV</a>
         / <a href="{{ url_for("index") }}">返回</a></h2>
@@ -32,11 +32,12 @@
     </thead>
     <tbody>
 
-    {% for test in suite %}
+    {% for test in testcases %}
         <tr>
             <td>{{ loop.index }}</td>
             <td>
-                <div {% if not test.category_match and zantao_api%} style="color:red;" {% endif %}>{{ test.category }}</div>
+                <div {% if not test.category_match and zantao_api %}
+                    style="color:red;" {% endif %}>{{ test.category }}</div>
             </td>
             <td {% if test.name|length>100 %}class="long-name" {% endif %}>{{ test.name }}
                 {% if test.name|length>100 %}
@@ -77,7 +78,9 @@
     </tbody>
 </table>
 <div class="footer">
-    <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a>
+    <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |
+    <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |
+    Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a>
 </div>
 </body>
 </html>
