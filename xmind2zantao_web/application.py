@@ -17,10 +17,10 @@ from xmind2zantao.zentao import xmind_to_zentao_csv_file
 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
-UPLOAD_FOLDER = './uploads'
+UPLOAD_FOLDER = join(os.getcwd(), 'uploads')
 ALLOWED_EXTENSIONS = ['xmind']
 DEBUG = True
-DATABASE = './data.db3'
+DATABASE = join(os.getcwd(), 'data.db3')
 HOST = '0.0.0.0'
 
 # 禅道地址 http://192.168.103.38/zentao
