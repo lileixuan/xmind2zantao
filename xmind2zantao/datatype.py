@@ -3,8 +3,8 @@
 
 class TestSuite(object):
     sub_suites = None
-    name = ""
-    details = ""
+    name = ''
+    details = ''
     testcase_list = None
 
     def to_dict(self):
@@ -25,15 +25,15 @@ class TestSuite(object):
 
 
 class TestCase(object):
-    name = ""
-    summary = ""
-    preconditions = ""
+    name = ''
+    summary = ''
+    preconditions = ''
     importance = 2
-    execution_type = 1
+    execution_type = ''
     steps = None
     category = ''
-
     category_match = False
+    apply_phase = ''
 
     def to_dict(self):
         me = {'name': self.name,
@@ -43,6 +43,7 @@ class TestCase(object):
               'execution_type': self.execution_type,
               'category': self.category,
               'category_match': self.category_match,
+              'apply_phase': self.apply_phase,
               'steps': []}
 
         if self.steps:
@@ -54,9 +55,9 @@ class TestCase(object):
 
 class TestStep(object):
     number = 1
-    action = ""
-    expected = ""
-    execution_type = 1
+    action = ''
+    expected = ''
+    execution_type = ''
 
     def to_dict(self):
         me = {'number': self.number,

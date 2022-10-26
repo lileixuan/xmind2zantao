@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # _*_ coding:utf-8 _*_
+import sys
+
+reload(sys)
+sys.setdefaultencoding('UTF-8')
 
 import os
 import re
@@ -33,6 +37,9 @@ ZANTAO_PRODUCT_ID = os.getenv('ZANTAO_PRODUCT_ID')
 
 # 是否启用禅道附加功能，目前主要是对模块的检查
 ENABLE_ZANTAO_API = ZANTAO_BASE_URL and ZANTAO_USERNAME and ZANTAO_PASSWD and ZANTAO_PRODUCT_ID
+
+# 默认用例类型。
+ZANTAO_DEFAULT_EXECUTION_TYPE = os.getenv('ZANTAO_DEFAULT_EXECUTION_TYPE')
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -184,6 +191,41 @@ def verify_uploaded_files(files):
         g.error = "Invalid file: {}".format(','.join(g.invalid_files))
 
 
+def fix_cases_with_api(testcases):
+    count = 0
+    template_data = []
+    catalog_tree = {}
+    if ENABLE_ZANTAO_API:
+        zantao = ZantaoHelper(ZANTAO_BASE_URL,
+                              ZANTAO_USERNAME, ZANTAO_PASSWD,
+                              )
+
+        catalog_dict, catalog_set = zantao.get_catalogs(ZANTAO_PRODUCT_ID)
+        temp = {}
+        for s in testcases:
+            category = s['category']
+            if category in catalog_dict:
+                s['category'] = catalog_dict.get(category)
+                s['category_match'] = True
+            elif category in catalog_set:
+                s['category_match'] = True
+            else:
+                if category not in temp:
+                    count += 1
+                    temp[category] = 0
+                else:
+                    temp[category] += 1
+
+            if ZANTAO_DEFAULT_EXECUTION_TYPE:
+                execution_type = s['execution_type']
+                s['execution_type'] = execution_type or ZANTAO_DEFAULT_EXECUTION_TYPE
+
+        catalog_tree, template_data = build_catalog_tree(
+            [s['category'][:s['category'].index('(')] if '(' in s['category'] else s['category'] for s in testcases],
+            check_dict=catalog_dict)
+    return count, catalog_tree, template_data
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index(download_xml=None):
     g.invalid_files = []
@@ -223,20 +265,8 @@ def download_file(filename):
     csv_out = full_path[:-5] + 'csv'
     testcases = xmind_to_testcase(full_path)
     testcases = [t.to_dict() for t in testcases]
-    if ENABLE_ZANTAO_API:
-        zantao = ZantaoHelper(ZANTAO_BASE_URL,
-                              ZANTAO_USERNAME, ZANTAO_PASSWD,
-                              )
 
-        catalog_dict, catalog_set = zantao.get_catalogs(ZANTAO_PRODUCT_ID)
-
-        for s in testcases:
-            category = s['category']
-            if category in catalog_dict:
-                s['category'] = catalog_dict.get(category)
-                s['category_match'] = True
-            elif category in catalog_set:
-                s['category_match'] = True
+    fix_cases_with_api(testcases)
 
     xmind_to_zentao_csv_file(testcases, csv_out)
 
@@ -251,86 +281,29 @@ def uploaded_file(filename):
 
 @app.route('/preview/<filename>')
 def preview_file(filename):
-    full_path = join(app.config['UPLOAD_FOLDER'], filename)
-
-    if not exists(full_path):
-        abort(404)
-
-    testcases = xmind_to_testcase(full_path)
-    testcases = [t.to_dict() for t in testcases]
-    suite_count = len(testcases)
-
-    count = 0
-    template_data = []
-    if ENABLE_ZANTAO_API:
-        zantao = ZantaoHelper(ZANTAO_BASE_URL,
-                              ZANTAO_USERNAME, ZANTAO_PASSWD,
-                              )
-
-        catalog_dict, catalog_set = zantao.get_catalogs(ZANTAO_PRODUCT_ID)
-        temp = {}
-        for s in testcases:
-            category = s['category']
-            if category in catalog_dict:
-                s['category'] = catalog_dict.get(category)
-                s['category_match'] = True
-            elif category in catalog_set:
-                s['category_match'] = True
-            else:
-                if category not in temp:
-                    count += 1
-                    temp[category] = 0
-                else:
-                    temp[category] += 1
-
-        catalog_tree, template_data = build_catalog_tree(
-            [s['category'][:s['category'].index('(')] if '(' in s['category'] else s['category'] for s in testcases],
-            check_dict=catalog_dict)
-
+    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename)
     return render_template('preview.html', name=filename, testcases=testcases, suite_count=suite_count,
-                           tree_data=template_data,
+                           tree_data=tree_template_data,
                            zantao_api=ENABLE_ZANTAO_API, catagory_nomatch=count)
 
 
 @app.route('/preview_tree/<filename>')
 def preview_tree_file(filename):
-    full_path = join(app.config['UPLOAD_FOLDER'], filename)
+    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename)
+    return render_template('preview_tree.html', name=filename, testcases=testcases, suite_count=suite_count,
+                           tree_data=tree_template_data, catalog_tree=catalog_tree,
+                           zantao_api=ENABLE_ZANTAO_API, catagory_nomatch=count)
 
+
+def preview_data(filename):
+    full_path = join(app.config['UPLOAD_FOLDER'], filename)
     if not exists(full_path):
         abort(404)
-
     testcases = xmind_to_testcase(full_path)
     testcases = [t.to_dict() for t in testcases]
     suite_count = len(testcases)
-
-    count = 0
-    zantao = ZantaoHelper(ZANTAO_BASE_URL,
-                          ZANTAO_USERNAME, ZANTAO_PASSWD,
-                          )
-
-    catalog_dict, catalog_set = zantao.get_catalogs(ZANTAO_PRODUCT_ID)
-    temp = {}
-    for s in testcases:
-        category = s['category']
-        if category in catalog_dict:
-            s['category'] = catalog_dict.get(category)
-            s['category_match'] = True
-        elif category in catalog_set:
-            s['category_match'] = True
-        else:
-            if category not in temp:
-                count += 1
-                temp[category] = 0
-            else:
-                temp[category] += 1
-
-    catalog_tree, template_data = build_catalog_tree(
-        [s['category'][:s['category'].index('(')] if '(' in s['category'] else s['category'] for s in testcases],
-        check_dict=catalog_dict)
-
-    return render_template('preview_tree.html', name=filename, testcases=testcases, suite_count=suite_count,
-                           tree_data=template_data, catalog_tree=catalog_tree,
-                           zantao_api=ENABLE_ZANTAO_API, catagory_nomatch=count)
+    count, catalog_tree, tree_template_data = fix_cases_with_api(testcases)
+    return catalog_tree, count, suite_count, testcases, tree_template_data
 
 
 @app.route('/delete/<filename>/<int:record_id>')

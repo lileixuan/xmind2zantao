@@ -59,15 +59,15 @@ def get_priority(d):
 
 def get_execution_type(d):
     """
-    support testcase option automation/manual by using "flag-green"
+    support testcase type by using "label"
     :param d: testcase topic
-    :return: 2 is automation, 1 is manual
+    :return: first label
     """
     # try to get automation flag "flag_green"
-    if isinstance(d['makers'], list):
-        if 'flag-green' in d['makers']:
-            return 2
-    return 1
+    if isinstance(d['labels'], list):
+        if d['labels']:
+            return d['labels'][0]
+    return ''
 
 
 def _filter_empty_value(values):

@@ -26,6 +26,7 @@
         <th width="10%">模块</th>
         <th>用例标题</th>
         <th width="60px">优先级</th>
+        <th width="60px">用例类型</th>
         <th width="200px">前置条件</th>
         <th width="45%">用例步骤</th>
     </tr>
@@ -49,6 +50,9 @@
                     优先级 {{ test.importance }}
                     <span class="tooltiptext">优先级 {{ test.importance }} </span>
                 </div>
+            </td>
+            <td>
+                <span class="tooltiptext">{{ test.execution_type }} </span>
             </td>
             <td>
                 {% if test.preconditions %}

@@ -2,45 +2,9 @@
 
 [![PyPI](https://img.shields.io/pypi/v/xmind2zantao.svg)](https://pypi.org/project/xmind2zantao/)
 
-### 规则
-**测试用例定义:**
+### 使用说明
 
-![测试用例标记](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/测试用例标记.png)
-
-**前置条件:**
-
-![前置条件](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/前置条件.png)
-
-**输出概览:**
-
-![输出预览](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/输出预览.png)
-
-### 详细说明
-
-1. 优先级标记的节点，或者以`P-`和`N-`开头的节点，作为测试用例的标题，即测试用例开始。
-2. 用例标题后的节点为用例步骤，用例步骤后面的节点为预期结果。
-3. 用例标题之前的节点，拼接组成`模块`属性。
-   1. 模块以`/`开始
-   2. 如果标题之前的节点中定义了禅道中的真实模块（以模块ID结尾：`/云运营/账单/平台管理/快照账单汇总(#4086)`），则直接使用。
-4. 使用`笔记(note)`作为前置条件。
-5. 以`叹号(!)`开头的节点将被忽略。
-6. 自由主题会被忽略，不进行转换
-
-
-**下载示例Xmind文件:**
-
-- [xmind2zantao.xmind](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/xmind2zantao.xmind)
-
-### 附加功能（需要后台启用相关配置）
-
-预览中查看每个用例的模块在禅道是否存在。
-
-![禅道模块提示](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/禅道模块提示.png)
-
-点击进入模块的树状展示页面，不存在的模块标红展示。
-
-![禅道模块树展示](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/禅道模块树展示.png)
-
+[https://github.com/lileixuan/xmind2zantao/blob/main/xmind2zantao_web/static/guide/index.md](https://github.com/lileixuan/xmind2zantao/blob/main/xmind2zantao_web/static/guide/index.md)
 
 ### 部署
 
@@ -52,9 +16,13 @@ pip install xmind2zantao
 1. 快速启动web服务
 
 ```shell
-gunicorn xmind2zantao_web.application:app -p application.pid -b 0.0.0.0:8000 -w 4 -D
+gunicorn xmind2zantao_web.application:app -e ZANTAO_DEFAULT_EXECUTION_TYPE='功能测试' -p application.pid -b 0.0.0.0:8000 -w 4 -D
 ```
-打开浏览器 输入正确的IP地址和端口来使用。
+**环境变量：**
+
+    `ZANTAO_DEFAULT_EXECUTION_TYPE` 如果指定了值，当用例类型为空的时候会只用该值替换。
+
+打开浏览器，输入上面指定IP地址和端口来使用。
 
 ![首页](https://github.com/lileixuan/xmind2zantao/raw/main/xmind2zantao_web/static/guide/首页.png)
 
@@ -64,7 +32,7 @@ gunicorn xmind2zantao_web.application:app -p application.pid -b 0.0.0.0:8000 -w 
 启动服务时指定相应的环境变量即可
 
 ```python
-gunicorn xmind2zantao_web.application:app -e ZANTAO_BASE_URL='http://127.0.0.1/zentao' -e ZANTAO_USERNAME=testuser -e ZANTAO_PASSWD='123456' -e ZANTAO_PRODUCT_ID=3 -p application.pid -b 0.0.0.0:8000 -w 4 -D
+gunicorn xmind2zantao_web.application:app -e ZANTAO_DEFAULT_EXECUTION_TYPE='功能测试' -e ZANTAO_BASE_URL='http://127.0.0.1/zentao' -e ZANTAO_USERNAME=testuser -e ZANTAO_PASSWD='123456' -e ZANTAO_PRODUCT_ID=3 -p application.pid -b 0.0.0.0:8000 -w 4 -D
 ```
 
 需要的环境变量如下：
