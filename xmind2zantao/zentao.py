@@ -3,6 +3,7 @@
 import csv
 import logging
 import os
+import re
 
 """
 Convert XMind fie to Zentao testcase csv file 
@@ -57,14 +58,23 @@ def gen_case_module(module_name):
 
 
 def gen_case_step_and_expected_result(steps):
+    """保留原来的换行格式；同时需要处理1. 2. 等这样的步骤开头的行，在之前增加空格，防止识别混乱"""
     case_step = ''
     case_expected_result = ''
 
+    def is_start_with_num(s):
+        if re.match("^\d.*", s):
+            return True
+        else:
+            return False
+
     for step_dict in steps:
-        case_step += str(step_dict['number']) + '. ' + step_dict['action'].strip('\n') + '\n'
-        case_expected_result += str(step_dict['number']) + '. ' + \
-                                step_dict['expected'].strip('\n') + '\n' \
-            if step_dict.get('expected', '') else ''
+        action = '\n'.join(
+            (' ' + s if is_start_with_num(s) else s for s in step_dict['action'].strip('\n').split('\n')))
+        expected = '\n'.join(
+            (' ' + s if is_start_with_num(s) else s for s in step_dict['expected'].strip('\n').split('\n')))
+        case_step += str(step_dict['number']) + '. ' + action + '\n'
+        case_expected_result += str(step_dict['number']) + '. ' + expected + '\n'
 
     return case_step.encode('utf-8'), case_expected_result.encode('utf-8')
 
