@@ -35,7 +35,9 @@ class TestCase(object):
     category_match = False
     apply_phase = ''
 
-    def to_dict(self):
+    def to_dict(self, default_attr=None):
+        _attr = default_attr or {}
+
         me = {'name': self.name,
               'summary': self.summary,
               'preconditions': self.preconditions,
@@ -45,6 +47,10 @@ class TestCase(object):
               'category_match': self.category_match,
               'apply_phase': self.apply_phase,
               'steps': []}
+
+        for k, v in _attr.iteritems():
+            if not me.get(k, None):
+                me[k] = v
 
         if self.steps:
             for s in self.steps:

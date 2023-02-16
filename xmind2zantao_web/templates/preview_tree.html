@@ -1,43 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ name }} | Xmind2Zandao Preview</title>
-    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
-    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
-    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/v2.css') }}">
-</head>
-<body style="background: #fff; padding: 50px">
-<div class="header">
-    <h1>{{ name }} - Preview</h1>
-    <h2> 用例: {{ testcases | length }} {% if zantao_api %}  / 模块缺失:
-        <span {% if catagory_nomatch %} style="color:red;" {% endif %}>{{ catagory_nomatch }}</span> {% endif %}
-        / <a href="{{ url_for("download_file",filename= name) }}">下载模块信息</a>
+{% extends "base.html" %}
+{% block main %}
+    <div class="splash-container">
+        <div class="splash-preview">
+            <div class="header">
+                <h1>{{ name }} - module</h1>
+                <h2> 产品: <span style="color:red;">{{ product_name }}</span> / 用例: {{ testcases | length }}
+                    {% if zantao_api %}  /
+                        模块缺失:
+                        <span {% if catagory_nomatch %} style="color:red;" {% endif %}>{{ catagory_nomatch }}</span>
 
-</div>
+                        / <a href="{{ url_for("create_catalogs",filename=name,product=selected_product) }}">创建模块</a>
+                        </h2>
+                    {% endif %}
+            </div>
 
-<ul class="domtree">
-    {% for node in tree_data %}
-        {% if node.wtype=='liin' %}
-            <li>
-                {% elif node.wtype=='liout' %}
-            </li>
-        {% elif node.wtype=='ulin' %}
-            <ul>
-                {% elif node.wtype=='ulout' %}
+
+            <ul class="domtree">
+                {% for node in tree_data %}
+                    {% if node.wtype=='liin' %}
+                        <li>
+                            {% elif node.wtype=='liout' %}
+                        </li>
+                    {% elif node.wtype=='ulin' %}
+                        <ul>
+                            {% elif node.wtype=='ulout' %}
+                        </ul>
+                    {% elif node.content %}
+                        <span {% if not node.exist and zantao_api %}
+                            style="color:red;" {% endif %}>{{ node.content }}</span>
+
+                    {% endif %}
+                {% endfor %}
             </ul>
-        {% elif node.content %}
-            <span {% if not node.exist and zantao_api %} style="color:red;" {% endif %}>{{ node.content }}</span>
-
-        {% endif %}
-    {% endfor %}
-</ul>
-
-<div class="footer">
-    Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a> |
-    <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |
-    <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |
-    Copyright &copy; 2022 Lilei Xuan
-</div>
-</body>
-</html>
+        </div>
+    </div>
+{% endblock %}

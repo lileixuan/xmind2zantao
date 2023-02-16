@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    {% block head %}
+        <meta charset="UTF-8">
+        <title>Xmind2Zantao</title>
+        <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
+        <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
+        <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/v2.css') }}">
+        <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/head.css') }}">
+
+    {% endblock %}
+</head>
+<body>
+
+{% block nav %}
+
+    <section class="nav">
+        <nav class="hd-left">
+
+    {% block headleft %}
+    {% endblock %}
+        </nav>
+        <nav class="hd-right">
+            <ul>
+                <li><a href="{{ url_for("index") }}">Home</a></li>
+                <li><a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">Help</a></li>
+                <li><a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Issue</a></li>
+
+                {% if zantao_api %}
+                    <li><a href="{{ url_for("logout") }}">Logout</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </section>
+
+{% endblock %}
+
+<section class="main">
+    {% block main %}
+    {% endblock %}
+
+    {% block footer %}
+        <div class="footer-home">
+            Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a> |
+            {#            <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |#}
+            {#            <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |#}
+            Copyright &copy; 2022 Lilei Xuan
+        </div>
+    {% endblock %}
+</section>
+
+
+</body>
+</html>

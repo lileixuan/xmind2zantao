@@ -12,7 +12,7 @@ from contextlib import closing
 from os.path import join, exists
 
 import arrow
-from flask import Flask, request, send_from_directory, g, render_template, abort, redirect, url_for
+from flask import Flask, request, send_from_directory, g, render_template, abort, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
 
 from xmind2zantao.xmind_parser import xmind_to_testcase
@@ -29,14 +29,12 @@ HOST = '0.0.0.0'
 
 # 禅道地址 http://192.168.103.38/zentao
 ZANTAO_BASE_URL = os.getenv('ZANTAO_BASE_URL')
-# 登录信息
-ZANTAO_USERNAME = os.getenv('ZANTAO_USERNAME')
-ZANTAO_PASSWD = os.getenv('ZANTAO_PASSWD')
-# 产品ID。
-ZANTAO_PRODUCT_ID = os.getenv('ZANTAO_PRODUCT_ID')
+# 指定可以使用对产品ID范围，逗号分割。
+id_list = os.getenv('ZANTAO_PRODUCT_ID')
+ZANTAO_PRODUCT_IDS = id_list.split(',') if id_list else None
 
 # 是否启用禅道附加功能，目前主要是对模块的检查
-ENABLE_ZANTAO_API = ZANTAO_BASE_URL and ZANTAO_USERNAME and ZANTAO_PASSWD and ZANTAO_PRODUCT_ID
+ENABLE_ZANTAO_API = ZANTAO_BASE_URL
 
 # 默认用例类型。
 ZANTAO_DEFAULT_EXECUTION_TYPE = os.getenv('ZANTAO_DEFAULT_EXECUTION_TYPE')
@@ -68,6 +66,16 @@ def init():
 @app.before_request
 def before_request():
     g.db = connect_db()
+    if not ENABLE_ZANTAO_API:
+        return
+    if request.path in ['/login', '/logout'] or request.path.startswith('/static'):
+        print '特殊路径%s 不验证' % request.path
+        return None
+    user = session.get('logged_in')  # 获取用户登录信息
+    if not user:
+        print '未登录 跳转'
+        return redirect(url_for('login'))
+    return None
 
 
 @app.teardown_request
@@ -87,9 +95,9 @@ def insert_record(xmind_name, note=''):
 
 def delete_record(filename, record_id):
     xmind_file = join(app.config['UPLOAD_FOLDER'], filename)
-    zentao_file = join(app.config['UPLOAD_FOLDER'], filename[:-5] + 'csv')
+    csv_file = join(app.config['UPLOAD_FOLDER'], filename[:-5] + 'csv')
 
-    for f in [xmind_file, zentao_file]:
+    for f in [xmind_file, csv_file]:
         if exists(f):
             os.remove(f)
 
@@ -147,7 +155,7 @@ def get_records(limit=12):
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 def check_file_name(name):
@@ -191,16 +199,18 @@ def verify_uploaded_files(files):
         g.error = "Invalid file: {}".format(','.join(g.invalid_files))
 
 
-def fix_cases_with_api(testcases):
+def fix_cases_with_api(testcases, product):
     count = 0
     template_data = []
     catalog_tree = {}
-    if ENABLE_ZANTAO_API:
+    if ENABLE_ZANTAO_API and product:
+        username = session.get('username')
+        password = session.get('password')
         zantao = ZantaoHelper(ZANTAO_BASE_URL,
-                              ZANTAO_USERNAME, ZANTAO_PASSWD,
+                              username, password,
                               )
 
-        catalog_dict, catalog_set = zantao.get_catalogs(ZANTAO_PRODUCT_ID)
+        catalog_dict, catalog_set = zantao.get_catalogs(product)
         temp = {}
         for s in testcases:
             category = s['category']
@@ -216,47 +226,92 @@ def fix_cases_with_api(testcases):
                 else:
                     temp[category] += 1
 
-            if ZANTAO_DEFAULT_EXECUTION_TYPE:
-                execution_type = s['execution_type']
-                s['execution_type'] = execution_type or ZANTAO_DEFAULT_EXECUTION_TYPE
-
         catalog_tree, template_data = build_catalog_tree(
             [s['category'][:s['category'].index('(')] if '(' in s['category'] else s['category'] for s in testcases],
             check_dict=catalog_dict)
     return count, catalog_tree, template_data
 
 
+def get_zantao_products(product):
+    if ENABLE_ZANTAO_API:
+        products = session.get('products')
+        p_list = []
+        sp_id = None
+        for k, v in products.iteritems():
+            if ZANTAO_PRODUCT_IDS and k not in ZANTAO_PRODUCT_IDS:
+                continue
+            p_list.append({'product_id': k, 'product_name': v})
+            if product == k:
+                sp_id = product
+        return p_list, sp_id or p_list[0]['product_id']
+    else:
+        return None, None
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        try:
+
+            password = request.form['password']
+            username = request.form['username']
+
+            z = ZantaoHelper(ZANTAO_BASE_URL, username, password)
+            products = z.get_products()
+
+            session['products'] = products
+            session['password'] = password
+            session['username'] = username
+            session['logged_in'] = True
+
+        except Exception as e:
+            flash('用户名或密码错误')
+            # return render_template('login.html')
+        return redirect(url_for('login'))
+    else:
+        if not session.get('logged_in'):
+            return render_template('login.html')
+        else:
+            return redirect(url_for('index'))
+
+
+@app.route("/logout")
+def logout():
+    session['logged_in'] = False
+    return redirect(url_for('index'))
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index(download_xml=None):
+    return render_template('index.html', zantao_api=ENABLE_ZANTAO_API, records=list(get_records()))
+
+
+@app.route('/upload', methods=['POST'])
+def upload_xmind(download_xml=None):
     g.invalid_files = []
     g.error = None
     g.download_xml = download_xml
     g.filename = None
 
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
+    if 'file' not in request.files:
+        return redirect(url_for('index'))
 
-        file = request.files['file']
+    file = request.files['file']
 
-        if file.filename == '':
-            return redirect(request.url)
+    if file.filename == '':
+        return redirect(url_for('index'))
 
-        g.filename = save_file(file)
-        verify_uploaded_files([file])
-        delete_records()
-
-    else:
-        g.upload_form = True
+    g.filename = save_file(file)
+    verify_uploaded_files([file])
+    delete_records()
 
     if g.filename:
         return redirect(url_for('preview_file', filename=g.filename))
-    else:
-        return render_template('index.html', records=list(get_records()))
 
 
+@app.route('/<product>/<filename>/to/zantao')
 @app.route('/<filename>/to/zantao')
-def download_file(filename):
+def download_csv_file(filename, product=None):
     full_path = join(app.config['UPLOAD_FOLDER'], filename)
 
     if not exists(full_path):
@@ -264,9 +319,9 @@ def download_file(filename):
 
     csv_out = full_path[:-5] + 'csv'
     testcases = xmind_to_testcase(full_path)
-    testcases = [t.to_dict() for t in testcases]
+    testcases = [t.to_dict({'execution_type':ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
 
-    fix_cases_with_api(testcases)
+    fix_cases_with_api(testcases, product)
 
     xmind_to_zentao_csv_file(testcases, csv_out)
 
@@ -275,44 +330,61 @@ def download_file(filename):
 
 
 @app.route('/uploads/<filename>')
-def uploaded_file(filename):
+def download_xmind_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route('/preview/<product>/<filename>')
 @app.route('/preview/<filename>')
-def preview_file(filename):
-    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename)
-    return render_template('preview.html', name=filename, testcases=testcases, suite_count=suite_count,
+def preview_file(filename, product=None):
+    products, selected_product = get_zantao_products(product)
+
+    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename, selected_product)
+    return render_template('preview.html', name=filename, products=products, selected_product=selected_product,
+                           testcases=testcases, suite_count=suite_count,
                            tree_data=tree_template_data,
                            zantao_api=ENABLE_ZANTAO_API, catagory_nomatch=count)
 
 
-@app.route('/preview_tree/<filename>')
-def preview_tree_file(filename):
-    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename)
-    return render_template('preview_tree.html', name=filename, testcases=testcases, suite_count=suite_count,
+@app.route('/create_tree/<product>/<filename>')
+def create_catalogs(filename, product):
+    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename, product)
+
+    if ENABLE_ZANTAO_API and product:
+        username = session.get('username')
+        password = session.get('password')
+        zantao = ZantaoHelper(ZANTAO_BASE_URL,
+                              username, password,
+                              )
+        zantao.create_catalogs(catalog_tree, product)
+    return redirect(url_for('preview_tree_file', product=product, filename=filename))
+
+
+@app.route('/preview_tree/<product>/<filename>')
+def preview_tree_file(filename, product):
+    products = session.get('products', {})
+    product_name = products.get(product, '')
+    catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename, product)
+    return render_template('preview_tree.html', name=filename, selected_product=product, product_name=product_name,
+                           testcases=testcases, suite_count=suite_count,
                            tree_data=tree_template_data, catalog_tree=catalog_tree,
                            zantao_api=ENABLE_ZANTAO_API, catagory_nomatch=count)
 
 
-def preview_data(filename):
+def preview_data(filename, product):
     full_path = join(app.config['UPLOAD_FOLDER'], filename)
     if not exists(full_path):
         abort(404)
     testcases = xmind_to_testcase(full_path)
-    testcases = [t.to_dict() for t in testcases]
+    testcases = [t.to_dict({'execution_type':ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
     suite_count = len(testcases)
-    count, catalog_tree, tree_template_data = fix_cases_with_api(testcases)
+    count, catalog_tree, tree_template_data = fix_cases_with_api(testcases, product)
     return catalog_tree, count, suite_count, testcases, tree_template_data
 
 
 @app.route('/delete/<filename>/<int:record_id>')
 def delete_file(filename, record_id):
-    full_path = join(app.config['UPLOAD_FOLDER'], filename)
-    if not exists(full_path):
-        abort(404)
-    else:
-        delete_record(filename, record_id)
+    delete_record(filename, record_id)
     return redirect('/')
 
 

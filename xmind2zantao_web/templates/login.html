@@ -1,0 +1,35 @@
+
+{#<link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/style.css') }}">#}
+<link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/v2.css') }}">
+<link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/login.css') }}">
+
+<div class="splash-container">
+    <div class="splash">
+        <h1>
+            Xmind to Zantao
+        </h1>
+    </div>
+</div>
+<form action="/login" method="POST">
+    <div class="login">
+        <div class="login-screen">
+            <div class="app-title">
+                <h2>使用禅道账户登录</h2>
+                {% for message in get_flashed_messages() %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+            <div class="login-form">
+                <div class="control-group">
+                    <input type="text" class="login-field" value="" placeholder="username" name="username">
+                    <label class="login-field-icon fui-user" for="login-name"></label></div>
+                <div class="control-group">
+                    <input type="password" class="login-field" value="" placeholder="password" name="password">
+                    <label class="login-field-icon fui-lock" for="login-pass"></label></div>
+                <input type="submit" value="登录" class="btn btn-primary btn-large btn-block">
+
+            </div>
+        </div>
+    </div>
+</form>
+

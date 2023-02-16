@@ -25,10 +25,19 @@ class ZantaoHelper(object):
         resp = session.post(
             url=self.host + '/user-login.json?m=user&f=login&t=json&zentaosid%s&account=%s&password=%s' % (
                 zentaosid, self.username, self.password))
+        info = json.loads(resp.text)
+        if info['status'] != 'success':
+            raise Exception('登录失败')
         return session
 
-    def get_catalogs(self, product_id):
+    def get_products(self):
+        print '读取产品集合开始'
+        resp = self.session.get(url=self.host + '/product-all.json')
+        products = json.loads(json.loads(resp.text)['data'])['products']
+        print '读取产品集合结束'
+        return products
 
+    def get_catalogs(self, product_id):
         print '读取远程目录开始'
         resp = self.session.get(url=self.host + '/testcase-browse-%s-0-all.json' % product_id)
         modules = json.loads(json.loads(resp.text)['data'])['modules']
@@ -63,10 +72,28 @@ class ZantaoHelper(object):
         else:
             return False, json.loads(datas['data'])['message']
 
+    def create_catalogs(self, root, product_id):
+        """创建模块树"""
+        if root == None:
+            return
+        queue = []
+        queue.append((None, root))
+        while queue:
+            pid, node = queue.pop(0)
+            if not node['exist']:
+                # 调用创建
+                re, node_id = self.add_catalog(node['name'], pid, product_id)
+                if not re:
+                    return
+            else:
+                node_id = node.get('catalog_id')
+            if node.get('children'):
+                queue.extend([(node_id, n) for n in node['children']])
+
 
 def build_catalog_tree(catalogs, check_dict=None):
     # catalogs = ['/A/B/C/D', '/A/B/C', '/A/B', '/A/C/D', '/A/C/D/E', '/A/D', '/B/C/D', '/B/D']
-    root_object = {'path': '', 'name': '/', 'exist': True, 'children': []}
+    root_object = {'path': '', 'name': '/', 'exist': True, 'catalog_id': '0', 'children': []}
     catalog_dict = {'/': root_object, }
     for catalog in catalogs:
         obj_list = catalog.strip('/').split('/')
@@ -76,8 +103,19 @@ def build_catalog_tree(catalogs, check_dict=None):
             if now_path in catalog_dict:
                 now_obj = catalog_dict[now_path]
             else:
+
+                if check_dict and now_path in check_dict:
+                    exist = True
+                    _path = check_dict[now_path]
+                    pos = _path.index('(')
+                    catalog_id = _path[pos + 2:-1]
+                else:
+                    exist = False
+                    catalog_id = None
+
                 now_obj = catalog_dict[now_path] = {'path': now_path, 'name': o,
-                                                    'exist': now_path in check_dict if check_dict else False,
+                                                    'exist': exist,
+                                                    'catalog_id': catalog_id,
                                                     'children': []}
                 parent['children'].append(now_obj)
             parent = now_obj
@@ -101,3 +139,9 @@ def build_catalog_tree(catalogs, check_dict=None):
 
     depth_tree(root_object)
     return root_object, template_data
+
+
+if __name__ == "__main__":
+    z = ZantaoHelper('http://192.168.103.38/zentao', 'xuanlilei', '!QAZ2wsx')
+    z.get_products()
+    print z

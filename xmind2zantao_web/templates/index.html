@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Xmind2Zantao</title>
-    <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon"/>
-    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/pure-min.css') }}">
-    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('static',filename='css/v2.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+{% block main %}
+
 <div class="splash-container">
     <div class="splash">
         <h1>
@@ -15,7 +8,7 @@
         </h1>
         <div class="splash-head">
             <div class="select-xmind splash-subhead">
-                <form method="post" enctype="multipart/form-data">
+                <form action="/upload" method="post" enctype="multipart/form-data">
                     <label id="file-label" for="file">Click
                         Here
                         to Choose Your Xmind
@@ -39,8 +32,8 @@
                         <tr>
                             <td title="{{ record[1] }}"> {{ record[0] }}</td>
                             <td>{{ record[2] }}</td>
-                            <td><a href="{{ url_for('uploaded_file',filename=record[1]) }}">XMIND</a> |
-                                <a href="{{ url_for('download_file',filename=record[1]) }}">CSV</a> |
+                            <td><a href="{{ url_for('download_xmind_file',filename=record[1]) }}">XMIND</a> |
+{#                                <a href="{{ url_for('download_csv_file',filename=record[1]) }}">CSV</a> |#}
                                 <a href="{{ url_for('preview_file',filename=record[1]) }}">PREVIEW</a>|
                                 <a href="{{ url_for('delete_file',filename=record[1], record_id=record[4]) }}">DELETE</a>
                             </td>
@@ -55,15 +48,7 @@
                 <p>Are you ready? Upload your xmind file now.</p>
             {% endif %}
         </div>
-        <div class="footer-home">
-            Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a> |
-            <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |
-            <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |
-            Copyright &copy; 2022 Lilei Xuan
-        </div>
     </div>
-
-</div>
 
 <script>
     document.getElementById("file").addEventListener("change", function () {
@@ -72,10 +57,5 @@
         }
     });
 
-
-
 </script>
-
-
-</body>
-</html>
+{% endblock %}
