@@ -41,7 +41,7 @@ ZANTAO_DEFAULT_EXECUTION_TYPE = os.getenv('ZANTAO_DEFAULT_EXECUTION_TYPE')
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-app.secret_key = os.urandom(32)
+app.secret_key = os.getenv('SECRET_KEY', 'xmind2zantao')
 
 
 def connect_db():
