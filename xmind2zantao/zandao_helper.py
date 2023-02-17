@@ -90,6 +90,30 @@ class ZantaoHelper(object):
             if node.get('children'):
                 queue.extend([(node_id, n) for n in node['children']])
 
+    def create_case(self, product, title, pri, steps, module, precondition=None, case_type='feature'):
+        datas = [
+            ("precondition", precondition or ''),
+            ("product", product),
+            ("title", title),
+            ("pri", pri),
+            ("type", case_type),
+            ("module", module)
+        ]
+        for i, vv in enumerate(steps):
+            datas.append(('steps[%s]' % (i + 1), vv[0]))
+            datas.append(('expects[%s]' % (i + 1), vv[1]))
+            datas.append(('stepType[%s]' % (i + 1), 'item'))
+
+        payload = urllib.urlencode(datas, True)
+
+        self.session.headers['Referer'] = self.host + '/testcase-create-%s-0-0.html' % product
+
+        resp = self.session.post(url=self.host + '/testcase-create-%s-0-0.json' % product,
+                                 data=payload)
+        res = json.loads(resp.text)
+        print res
+        pass
+
 
 def build_catalog_tree(catalogs, check_dict=None):
     # catalogs = ['/A/B/C/D', '/A/B/C', '/A/B', '/A/C/D', '/A/C/D/E', '/A/D', '/B/C/D', '/B/D']
@@ -139,9 +163,3 @@ def build_catalog_tree(catalogs, check_dict=None):
 
     depth_tree(root_object)
     return root_object, template_data
-
-
-if __name__ == "__main__":
-    z = ZantaoHelper('http://192.168.103.38/zentao', 'xuanlilei', '!QAZ2wsx')
-    z.get_products()
-    print z

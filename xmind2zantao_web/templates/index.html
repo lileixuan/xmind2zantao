@@ -32,7 +32,7 @@
                         <tr>
                             <td title="{{ record[1] }}"> {{ record[0] }}</td>
                             <td>{{ record[2] }}</td>
-                            <td><a href="{{ url_for('download_xmind_file',filename=record[1]) }}">XMIND</a> |
+                            <td><a href="{{ url_for('download_xmind_file',filename=record[1]) }}">DOWNLOAD</a> |
 {#                                <a href="{{ url_for('download_csv_file',filename=record[1]) }}">CSV</a> |#}
                                 <a href="{{ url_for('preview_file',filename=record[1]) }}">PREVIEW</a>|
                                 <a href="{{ url_for('delete_file',filename=record[1], record_id=record[4]) }}">DELETE</a>
