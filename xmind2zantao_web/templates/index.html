@@ -9,22 +9,19 @@
         <div class="splash-head">
             <div class="select-xmind splash-subhead">
                 <form action="/upload" method="post" enctype="multipart/form-data">
-                    <label id="file-label" for="file">Click
-                        Here
-                        to Choose Your Xmind
-                    </label>
+                    <label id="file-label" for="file">点击这里选择Xmind文件</label>
                     <input id="file" accept=".xmind" type="file" name="file" required/><br>
                     <input type="submit" class="pure-button "
-                           value="Convert To Zantao"/>
+                           value="开始转换"/>
                 </form>
             </div>
             {% if records %}
                 <table class="pure-table recent-xminds">
                     <thead>
                     <tr>
-                        <th width="60%">NAME</th>
-                        <th width="15%">TIME</th>
-                        <th>ACTIONS</th>
+                        <th width="60%">文件</th>
+                        <th width="15%">时间</th>
+                        <th>操作</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -32,10 +29,10 @@
                         <tr>
                             <td title="{{ record[1] }}"> {{ record[0] }}</td>
                             <td>{{ record[2] }}</td>
-                            <td><a href="{{ url_for('download_xmind_file',filename=record[1]) }}">DOWNLOAD</a> |
+                            <td><a href="{{ url_for('download_xmind_file',filename=record[1]) }}">下载</a> |
 {#                                <a href="{{ url_for('download_csv_file',filename=record[1]) }}">CSV</a> |#}
-                                <a href="{{ url_for('preview_file',filename=record[1]) }}">PREVIEW</a>|
-                                <a href="{{ url_for('delete_file',filename=record[1], record_id=record[4]) }}">DELETE</a>
+                                <a href="{{ url_for('preview_file',filename=record[1]) }}">预览转换</a> |
+                                <a href="{{ url_for('delete_file',filename=record[1], record_id=record[4]) }}"> 删除</a>
                             </td>
                         </tr>
                     {% endfor %}

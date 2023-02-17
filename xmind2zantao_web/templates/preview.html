@@ -22,7 +22,7 @@
     <div class="splash-container">
         <div class="splash-preview">
             <div class="header">
-                <h1>{{ name }} - Preview</h1>
+                <h1>{{ name }}</h1>
                 <h2> 用例: {{ testcases | length }}
                     {% if zantao_api %}  /
                         <a href="{{ url_for('preview_tree_file',filename=name,product=selected_product) }}"

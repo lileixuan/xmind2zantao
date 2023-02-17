@@ -24,12 +24,12 @@
         </nav>
         <nav class="hd-right">
             <ul>
-                <li><a href="{{ url_for("index") }}">Home</a></li>
-                <li><a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">Help</a></li>
-                <li><a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Issue</a></li>
+                <li><a href="{{ url_for("index") }}">首页</a></li>
+                <li><a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">帮助</a></li>
+{#                <li><a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Issue</a></li>#}
 
                 {% if zantao_api %}
-                    <li><a href="{{ url_for("logout") }}">Logout</a></li>
+                    <li><a href="{{ url_for("logout") }}">登出</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -45,7 +45,7 @@
         <div class="footer-home">
             Powered by <a href="https://github.com/lileixuan/xmind2zantao" target="_blank">XMind2Zantao</a> |
             {#            <a href="{{ url_for('static',filename='guide/index.html') }}" target="_blank">How To Use</a> |#}
-            {#            <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |#}
+                        <a href="https://github.com/lileixuan/xmind2zantao/issues/new" target="_blank">Report Issue</a> |
             Copyright &copy; 2022 Lilei Xuan
         </div>
     {% endblock %}
