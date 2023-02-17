@@ -237,13 +237,14 @@ def get_zantao_products(product):
         products = session.get('products')
         p_list = []
         sp_id = None
-        for k, v in products.iteritems():
-            if ZANTAO_PRODUCT_IDS and k not in ZANTAO_PRODUCT_IDS:
-                continue
-            p_list.append({'product_id': k, 'product_name': v})
-            if product == k:
-                sp_id = product
-        return p_list, sp_id or p_list[0]['product_id']
+        if ZANTAO_PRODUCT_IDS:
+            for k in ZANTAO_PRODUCT_IDS:
+                p_list.append({'product_id': k, 'product_name': products[k]})
+                if product == k:
+                    sp_id = product
+        else:
+            p_list = [{'product_id': k, 'product_name': v} for k, v in products.iteritems()]
+        return p_list, sp_id or p_list[0]['product_id'] if p_list else None
     else:
         return None, None
 
@@ -319,7 +320,7 @@ def download_csv_file(filename, product=None):
 
     csv_out = full_path[:-5] + 'csv'
     testcases = xmind_to_testcase(full_path)
-    testcases = [t.to_dict({'execution_type':ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
+    testcases = [t.to_dict({'execution_type': ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
 
     fix_cases_with_api(testcases, product)
 
@@ -338,6 +339,8 @@ def download_xmind_file(filename):
 @app.route('/preview/<filename>')
 def preview_file(filename, product=None):
     products, selected_product = get_zantao_products(product)
+    if not product and selected_product:
+        return redirect(url_for('preview_file', product=selected_product, filename=filename))
 
     catalog_tree, count, suite_count, testcases, tree_template_data = preview_data(filename, selected_product)
     return render_template('preview.html', name=filename, products=products, selected_product=selected_product,
@@ -376,7 +379,7 @@ def preview_data(filename, product):
     if not exists(full_path):
         abort(404)
     testcases = xmind_to_testcase(full_path)
-    testcases = [t.to_dict({'execution_type':ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
+    testcases = [t.to_dict({'execution_type': ZANTAO_DEFAULT_EXECUTION_TYPE}) for t in testcases]
     suite_count = len(testcases)
     count, catalog_tree, tree_template_data = fix_cases_with_api(testcases, product)
     return catalog_tree, count, suite_count, testcases, tree_template_data
