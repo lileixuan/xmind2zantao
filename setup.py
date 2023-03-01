@@ -34,7 +34,7 @@ def main():
         url='https://github.com/lileixuan/xmind2zantao',
         keywords="xmind zantao import converter testing testcase",
         classifiers=classifiers,
-        version="2.0.1",
+        version="2.0.2",
         author="LileiXuan",
         author_email="lileixuan@gmail.com",
         packages=find_packages(exclude=['tests', 'tests.*']),
